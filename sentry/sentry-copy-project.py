@@ -2,8 +2,8 @@ import requests
 import json
 
 # Настройки
-old_sentry_url = "https://sentry.phrm.tech/api/0/projects/expero/pharmix_catalog_server/"
-new_sentry_url = "http://87.242.88.133/api/0/teams/sentry/sentry/projects/"
+old_sentry_url = "https://sentry.phrm.tech/api/0/organizations/expero/projects/"
+new_sentry_url = "http://87.242.88.133/api/0/teams/expero/pharmix/projects/"
 api_token_old = "68499a658cf74d71b929df16c33a80807858494f1fa94d818560180b8326357b"
 api_token_new = "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"
 
@@ -23,19 +23,20 @@ response_old = requests.get(old_sentry_url, headers=headers_old)
 # Проверка статуса ответа
 if response_old.status_code == 200:
     try:
-        project = response_old.json()
-        print(f"Получены данные о проекте: {json.dumps(project, indent=4)}")
+        projects = response_old.json()
+        print(f"Получены данные о проектах: {json.dumps(projects, indent=4)}")
     except ValueError as e:
         print("Ошибка при разборе JSON:", e)
-        project = None
+        projects = []
 else:
-    print(f"Не удалось получить данные о проекте. Статус код: {response_old.status_code}")
-    project = None
+    print(f"Не удалось получить данные о проектах. Статус код: {response_old.status_code}")
+    projects = []
 
-# Словарь для хранения данных о проекте и его DSN ключах
+# Словарь для хранения данных о проектах и их DSN ключах
 project_data = {}
 
-if project:
+# Обработка каждого проекта
+for project in projects:
     project_slug = project.get("slug")
     project_name = project.get("name")
     
@@ -64,8 +65,6 @@ if project:
         print(f"Получены данные для проекта: {project_name} ({project_slug})")
     else:
         print("Проект не содержит необходимую информацию (slug или name).")
-else:
-    print("Нет данных о проекте для обработки.")
 
 # Вывод собранных данных в консоль для проверки
 print(json.dumps(project_data, indent=4))
@@ -91,7 +90,7 @@ for slug, data in project_data.items():
         print(f"Проект {data['name']} ({slug}) успешно создан в новой инстанции.")
         # Получение DSN ключа нового проекта
         new_project_slug = response_new.json()["slug"]
-        new_dsn_url = f"http://87.242.88.133/api/0/projects/sentry/{new_project_slug}/keys/"
+        new_dsn_url = f"http://87.242.88.133/api/0/projects/expero/{new_project_slug}/keys/"
         
         # Копирование DSN ключей в новый проект
         for key in data["dsn_keys"]:
